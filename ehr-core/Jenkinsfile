@@ -9,22 +9,24 @@ pipeline {
         }
 
         stage('HIPAA Compliance Lint') {
-            steps {
-                script {
-                    if (!fileExists('hipaa.properties')) {
-                        error('hipaa.properties is missing')
-                    }
+    steps {
+        script {
+            def configFile = 'ehr-core/hipaa.properties'
 
-                    def config = readFile('hipaa.properties')
-
-                    if (!config.contains('AUDIT_LOGGING=ENABLED')) {
-                        error('HIPAA audit logging is not enabled')
-                    }
-
-                    echo 'HIPAA Compliance Lint PASSED'
-                }
+            if (!fileExists(configFile)) {
+                error('HIPAA configuration missing')
             }
+
+            def config = readFile(configFile)
+
+            if (!config.contains('AUDIT_LOGGING=ENABLED')) {
+                error('Audit logging is disabled')
+            }
+
+            echo 'HIPAA Compliance Lint PASSED'
         }
+    }
+}
 
         stage('Docker Package') {
             steps {
