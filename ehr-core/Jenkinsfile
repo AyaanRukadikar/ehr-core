@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('HIPAA Compliance Lint') {
+            steps {
+                script {
+                    if (!fileExists('hipaa.properties')) {
+                        error('hipaa.properties is missing')
+                    }
+
+                    def config = readFile('hipaa.properties')
+
+                    if (!config.contains('AUDIT_LOGGING=ENABLED')) {
+                        error('HIPAA audit logging is not enabled')
+                    }
+
+                    echo 'HIPAA Compliance Lint PASSED'
+                }
+            }
+        }
+
+        stage('Docker Package') {
+            steps {
+                script {
+                    sh 'docker build -t ehr-portal:2.0 .'
+                }
+            }
+        }
+    }
+}
